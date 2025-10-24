@@ -4,7 +4,6 @@
   // "main": "./worker/index.ts",
   "assets": {
     "directory": "./frontend/",
-    "not_found_handling": "single-page-application",
-    "binding": "ASSETS"
+    "not_found_handling": "single-page-application"
   }
 }
