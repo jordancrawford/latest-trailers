@@ -23,5 +23,4 @@ Deployed using Cloudflare Pages.
 These variables must be configured in Cloudflare (or a `.env` file if running using Wrangler locally).
 
 `TMDB_TOKEN`
-
-`FETCHER_SUCCESS_PUBLISH_URL`
+`FETCH_SUCCESS_NOTIFICATION_URL`

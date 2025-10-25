@@ -1,38 +1,37 @@
-import { fetchUpcomingTrailers } from './fetcher.js';
-
-const upcomingKey = "upcoming";
+import { showingKey, upcomingKey, fetchShowingTrailers, fetchUpcomingTrailers } from './fetcher.js';
 
 export default {
   async scheduled(controller, env, ctx) {
-    console.log("Scheduled fetch triggered");
+    console.info("Scheduled fetch triggered");
 
     ctx.waitUntil((async () => {
       const tmdbToken = env.TMDB_TOKEN;
 
-      // TODO: Fetch a pile of trailers
-      // We could fetch this on a reduced schedule, few times a week.
-      const trailers = await fetchUpcomingTrailers(tmdbToken);
+      const showingTrailers = await fetchShowingTrailers(tmdbToken);
+      await env.trailerCache.put(showingKey, JSON.stringify(showingTrailers));
+      console.info("Saved showing trailers");
 
-      await env.trailerCache.put(upcomingKey, trailers)
-      // TODO: Store trailers in a SQL database instead?
-      // This way we can always figure out the right set.
+      const upcomingTrailers = await fetchUpcomingTrailers(tmdbToken);
+      await env.trailerCache.put(upcomingKey, JSON.stringify(upcomingTrailers));
+      console.info("Saved upcoming trailers");
 
-      console.log("Fetched trailers:", trailers);
-
-      // TODO: Fetch now showing
+      if (env.FETCH_SUCCESS_NOTIFICATION_URL) {
+        await fetch(env.FETCH_SUCCESS_NOTIFICATION_URL);
+        console.info("Hit success URL");
+      } else {
+        console.info("No success URL configured");
+      }
     })());
   },
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (path === "/now-showing.json")   {
-      return Response.json({
-        response: "Now Showing JSON data"
-      });
+    if (path === "/showing.json")   {
+      const trailers = JSON.parse(await env.trailerCache.get(showingKey));
+      return Response.json(trailers);
     } else {
-      const trailers = await env.trailerCache.get(upcomingKey);
-      console.log(trailers);
+      const trailers = JSON.parse(await env.trailerCache.get(upcomingKey));
       return Response.json(trailers);
     }
   },

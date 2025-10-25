@@ -1,3 +1,6 @@
+export const showingKey = "showing";
+export const upcomingKey = "upcoming";
+
 const today = new Date();
 
 const tomorrow = new Date()
@@ -7,6 +10,8 @@ const threeMonthsAgo = new Date();
 threeMonthsAgo.setDate(today.getDate() - 90);
 
 const dateToIsoDateOnly = (date) => date.toISOString().split('T')[0];
+
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const fetchTmdb = async (token, url) => {
   const httpOptions = {
@@ -27,48 +32,49 @@ const fetchTmdb = async (token, url) => {
   }
 };
 
-const fetchMoviesAndTrailers = async (params, token) => {
-  const movieResult = await fetchTmdb(token, `https://api.themoviedb.org/3/discover/movie?${params}`);
-  console.log(movieResult);
-  const movieIds = movieResult.results.map((movie) => movie.id);
+const fetchMoviesAndTrailers = async (key, params, token) => {
+  console.info(`Fetching ${key} trailers...`)
 
-  const trailers = await Promise.all(movieIds.map(movieId => fetchTmdb(token, `https://api.themoviedb.org/3/movie/${movieId}/videos`)));
+  const { results: movies } = await fetchTmdb(token, `https://api.themoviedb.org/3/discover/movie?${params}`);
+  console.log(movies);
 
-  console.log(trailers);
+  const allTrailers = await Promise.all(movies.map(async (movie) => {
+    console.info(`Getting videos for "${movie.title}"`);
+    const { results: videos } = await fetchTmdb(token, `https://api.themoviedb.org/3/movie/${movie.id}/videos`);
 
-  return trailers;
-  // TODO: Clean up the trailer info?
+    const trailers = videos.filter((video) => video.type === "Trailer" && video.site === "YouTube");
+
+    return {
+      movieId: movie.id,
+      movieTitle: movie.title,
+      trailerKeys: trailers.map((trailer) => trailer.key)
+    };
+  }));
+
+  console.log(`Successfully fetched ${allTrailers.length} ${key} trailers`);
+
+  return {
+    type: key,
+    fetchedAt: today.toISOString(),
+    trailers: allTrailers
+  };
 };
 
-export const fetchUpcomingTrailers = async (token) => {
-  console.info("Fetching Upcoming trailers...")
-
-  const params = new URLSearchParams({
+export const fetchUpcomingTrailers = async (token) =>
+  await fetchMoviesAndTrailers(upcomingKey, new URLSearchParams({
     'sort_by': 'popularity.desc',
     'include_adult': false,
     'primary_release_date.gte': dateToIsoDateOnly(tomorrow),
     'with_release_type': '2|3',
     'with_original_language': 'en'
-  });
+  }), token);
 
-  const result = await fetchMoviesAndTrailers(params, token);
-  console.log(`Successfully fetched ${result.length} trailers`);
-  return result;
-};
-
-export const fetchNowShowingTrailers = async (token) => {
-  console.info("Fetching Now Showing trailers...")
-
-  const params = new URLSearchParams({
+export const fetchShowingTrailers = async (token) =>
+  await fetchMoviesAndTrailers(showingKey, new URLSearchParams({
     'sort_by': 'popularity.desc',
     'include_adult': false,
     'primary_release_date.gte': dateToIsoDateOnly(threeMonthsAgo),
     'primary_release_date.lte': dateToIsoDateOnly(today),
     'with_release_type': '2|3',
     'with_original_language': 'en'
-  });
-
-  const result = await fetchMoviesAndTrailers(params, token);
-  console.log(`Successfully fetched ${result.length} trailers`);
-  return result;
-};
+  }), token);
