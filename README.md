@@ -15,3 +15,13 @@ See [`fetcher`](fetcher) for the code which fetches trailers from TMDB.
 See [`frontend`](frontend) for the frontend UI.
 
 Deployed using Cloudflare Pages.
+
+<!-- TODO: Find a proper home for this! -->
+
+## Environment variables
+
+These variables must be configured in Cloudflare (or a `.env` file if running using Wrangler locally).
+
+`TMDB_TOKEN`
+
+`FETCHER_SUCCESS_PUBLISH_URL`

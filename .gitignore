@@ -67,3 +67,4 @@ typings/
 fetcher/config*
 now-showing.json
 upcoming.json
+.wrangler
