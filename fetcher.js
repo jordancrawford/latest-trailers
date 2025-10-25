@@ -36,7 +36,6 @@ const fetchMoviesAndTrailers = async (key, params, token) => {
   console.info(`Fetching ${key} trailers...`)
 
   const { results: movies } = await fetchTmdb(token, `https://api.themoviedb.org/3/discover/movie?${params}`);
-  console.log(movies);
 
   const allTrailers = await Promise.all(movies.map(async (movie) => {
     console.info(`Getting videos for "${movie.title}"`);
@@ -51,7 +50,7 @@ const fetchMoviesAndTrailers = async (key, params, token) => {
     };
   }));
 
-  console.log(`Successfully fetched ${allTrailers.length} ${key} trailers`);
+  console.info(`Successfully fetched ${allTrailers.length} ${key} trailers`);
 
   return {
     type: key,
