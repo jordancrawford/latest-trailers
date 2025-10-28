@@ -1,13 +1,28 @@
-import { showingKey, upcomingKey, fetchShowingTrailers, fetchUpcomingTrailers } from './fetcher.js';
+import { fetchMoviesAndTrailers } from './fetcher.js';
+
+const showingKey = "showing";
+const upcomingKey = "upcoming";
 
 const fetchAndCacheTrailers = async (key, env, refresh) => {
   let cachedData = refresh ? null : await env.trailerCache.get(key);
 
   if (!cachedData) {
     const tmdbToken = env.TMDB_TOKEN;
-    const trailers = key == showingKey ? await fetchShowingTrailers(tmdbToken) : await fetchUpcomingTrailers(tmdbToken);
+    const today = new Date();
+    const tomorrow = new Date()
+    tomorrow.setDate(today.getDate() + 1);
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setDate(today.getDate() - 90);
+
+    let trailers;
+    if (key == showingKey) {
+      trailers = await fetchMoviesAndTrailers(key, tmdbToken, threeMonthsAgo, today);
+    } else {
+      trailers = await fetchMoviesAndTrailers(key, tmdbToken, tomorrow, null);
+    }
+
     await env.trailerCache.put(key, JSON.stringify(trailers));
-    console.info(`Saved ${key}} trailers`);
+    console.info(`Saved ${key} trailers`);
 
     return trailers;
   } else {

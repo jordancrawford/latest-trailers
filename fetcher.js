@@ -1,6 +1,3 @@
-export const showingKey = "showing";
-export const upcomingKey = "upcoming";
-
 const today = new Date();
 
 const tomorrow = new Date()
@@ -10,8 +7,6 @@ const threeMonthsAgo = new Date();
 threeMonthsAgo.setDate(today.getDate() - 90);
 
 const dateToIsoDateOnly = (date) => date.toISOString().split('T')[0];
-
-const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const fetchTmdb = async (token, url) => {
   const httpOptions = {
@@ -32,12 +27,21 @@ const fetchTmdb = async (token, url) => {
   }
 };
 
-const fetchMoviesAndTrailers = async (key, params, token) => {
+export const fetchMoviesAndTrailers = async (key, token, releasedAfter, releasedBefore) => {
   console.info(`Fetching ${key} trailers...`)
+
+  const params = new URLSearchParams({
+    'sort_by': 'popularity.desc',
+    'include_adult': false,
+    'primary_release_date.gte': releasedAfter && dateToIsoDateOnly(releasedAfter),
+    'primary_release_date.lte': releasedBefore && dateToIsoDateOnly(releasedBefore),
+    'with_release_type': '2|3',
+    'with_original_language': 'en'
+  })
 
   const { results: movies } = await fetchTmdb(token, `https://api.themoviedb.org/3/discover/movie?${params}`);
 
-  const allTrailers = await Promise.all(movies.map(async (movie) => {
+  const moviesWithTrailers = await Promise.all(movies.map(async (movie) => {
     console.info(`Getting videos for "${movie.title}"`);
     const { results: videos } = await fetchTmdb(token, `https://api.themoviedb.org/3/movie/${movie.id}/videos`);
 
@@ -46,34 +50,18 @@ const fetchMoviesAndTrailers = async (key, params, token) => {
     return {
       movieId: movie.id,
       movieTitle: movie.title,
+      releaseDate: movie.release_date,
       trailerKeys: trailers.map((trailer) => trailer.key)
     };
   }));
 
-  console.info(`Successfully fetched ${allTrailers.length} ${key} trailers`);
+  const onlyMoviesWithTrailers = moviesWithTrailers.filter((movie) => movie.trailerKeys.length > 0);
+
+  console.info(`Successfully fetched ${moviesWithTrailers.length} ${key} movies, ${onlyMoviesWithTrailers.length} movies have trailers`);
 
   return {
     type: key,
-    fetchedAt: today.toISOString(),
-    trailers: allTrailers
+    fetchedAt: new Date().toISOString(),
+    trailers: onlyMoviesWithTrailers
   };
 };
-
-export const fetchUpcomingTrailers = async (token) =>
-  await fetchMoviesAndTrailers(upcomingKey, new URLSearchParams({
-    'sort_by': 'popularity.desc',
-    'include_adult': false,
-    'primary_release_date.gte': dateToIsoDateOnly(tomorrow),
-    'with_release_type': '2|3',
-    'with_original_language': 'en'
-  }), token);
-
-export const fetchShowingTrailers = async (token) =>
-  await fetchMoviesAndTrailers(showingKey, new URLSearchParams({
-    'sort_by': 'popularity.desc',
-    'include_adult': false,
-    'primary_release_date.gte': dateToIsoDateOnly(threeMonthsAgo),
-    'primary_release_date.lte': dateToIsoDateOnly(today),
-    'with_release_type': '2|3',
-    'with_original_language': 'en'
-  }), token);
