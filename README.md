@@ -28,9 +28,11 @@ The frontend automatically plays the latest / now showing movie trailers.
 - Has an about page with information about the source of the content and other (possible) FAQ's.
 
 ## Environment variables
-These variables must be configured in Cloudflare (or a `.env` file if running using Wrangler locally).
+When running in development, configure these in a `.env` file.
+When deploying, specify these as secrets in Cloudflare's UI under the "Variables and Secrets" section - they are not set as variables in the Wrangler config as this repo is public.
+Secrets aren't overwritten on deployment.
 
-### `TMDB_TOKEN` (secret)
+### `TMDB_TOKEN`
 
 The API token from TMDB.
 
@@ -46,6 +48,3 @@ If you'd like to test scheduled jobs, run `npx wrangler dev ----test-scheduled` 
 
 ## Deploy
 Use `npx wrangler deploy` to deploy to Cloudflare or connect it to Cloudflare's Git integration for automatic deployment ([learn more](https://developers.cloudflare.com/workers/ci-cd/builds/)).
-
-
-In the "Variables and Secrets" section in Cloudflare, specify the environment variables you require.
