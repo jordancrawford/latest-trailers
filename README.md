@@ -1,5 +1,3 @@
-Test trigger build
-
 # Latest Trailers
 
 **Take a look at [trailers.jc.kiwi](https://trailers.jc.kiwi/)**
@@ -11,18 +9,40 @@ Your browser keeps track of which trailers you've seen, so if you come back anot
 
 [Read more about how it works on my blog](https://jc.kiwi/latest-trailers/)
 
-## Developement
+## API
 
-See [`fetcher`](fetcher) for the code which fetches trailers from TMDB.
-See [`frontend`](frontend) for the frontend UI.
+See [`api`](api) for the API code (Cloudflare Worker) which fetches trailers from TMDB.
 
-Deployed using Cloudflare Pages.
+The API fetches trailers for upcoming and now showing movies from TheMovieDatabase and saves the result to a KV store.
 
-<!-- TODO: Find a proper home for this! -->
+## Frontend
+See [`frontend`](frontend) for the frontend UI code.
+
+The frontend automatically plays the latest / now showing movie trailers.
+
+**Full features:**
+- Keeps track of which movies the user has seen trailers for.
+- Plays trailers automatically.
+- Automatically plays the next trailer once one is finished.
+- Allows users to reset their seen trailers after watching them all so they can start over.
+- Has an about page with information about the source of the content and other (possible) FAQ's.
 
 ## Environment variables
-
 These variables must be configured in Cloudflare (or a `.env` file if running using Wrangler locally).
 
-`TMDB_TOKEN`
-`FETCH_SUCCESS_NOTIFICATION_URL`
+### `TMDB_TOKEN`
+
+The API token from TMDB.
+
+### `FETCH_SUCCESS_NOTIFICATION_URL` (optional)
+
+A success URL to hit if fetch happens successfully.
+
+## Development
+1. Set your environment variables in a `.env` file.
+2. Run `npx wrangler dev`
+
+If you'd like to test scheduled jobs, run `npx wrangler dev ----test-scheduled` and run `curl "http://localhost:[port number]/__scheduled"` to simulate the scheduled job.
+
+## Deploy
+<!-- TODO -->
