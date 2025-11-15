@@ -13,11 +13,11 @@ Storage.prototype.getObject = function(key) {
 }
 
 function nowShowing() {
-  var url = '/now-showing.json';
+  var url = '/showing.json';
   var request = $.get(url);
 
   request.done(function(response) {
-    movies = response;
+    movies = response.trailers;
     playRandomTrailer();
   });
   setActiveNavigation('nowShowingNav');
@@ -29,7 +29,7 @@ function upcoming() {
   var request = $.get(url);
 
   request.done(function(response) {
-    movies = response;
+    movies = response.trailers;
     playRandomTrailer();
   });
   setActiveNavigation('upcomingNav');

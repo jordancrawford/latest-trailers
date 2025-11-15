@@ -65,5 +65,6 @@ typings/
 # End of https://www.gitignore.io/api/node
 
 fetcher/config*
-now-showing.json
+showing.json
 upcoming.json
+.wrangler
